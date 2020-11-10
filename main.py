@@ -48,7 +48,7 @@ class ICMnIMDBtoLetterboxdImporter:
         header = ['imdbID', 'Title', 'WatchedDate', 'Rating10']
         lines = []
         for entry in entries:
-            lines.append([entry, entries[entry]['title'], entries[entry]['date'], entries[entry]['rating']])
+            lines.insert(0, [entry, entries[entry]['title'], entries[entry]['date'], entries[entry]['rating']])
 
         for i in range((len(entries) // 1900) + 1):
             with open(f'results-{i+1}.csv', 'w') as file:
