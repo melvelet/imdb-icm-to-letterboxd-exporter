@@ -1,6 +1,32 @@
 import csv
-
+import requests
 import click
+
+
+class CSVDownloader:
+    def __init__(self):
+        self.session = requests.Session()
+        self.cookies_icm = {
+            'PHPSESSID': "",
+        }
+        self.cookies_imdb = {
+            "at-main": "",
+            'ubid-main': "",
+        }
+
+    def get_icm_checks_csv(self):
+        print("Downloading ICM checks...")
+        icm_csv_url = "https://www.icheckmovies.com/movies/checked/?export"
+        r = self.session.get(icm_csv_url, cookies=self.cookies_icm)
+        with open(f'checked.csv', 'wb') as file:
+            file.write(r.content)
+
+    def get_imdb_ratings_csv(self):
+        print("Downloading IMDb ratings...")
+        imdb_csv_url = "https://www.imdb.com/user/ur13273039/ratings/export"
+        r = self.session.get(imdb_csv_url, cookies=self.cookies_imdb)
+        with open(f'ratings.csv', 'wb') as file:
+            file.write(r.content)
 
 
 class ICMnIMDBtoLetterboxdImporter:
@@ -51,11 +77,10 @@ class ICMnIMDBtoLetterboxdImporter:
             lines.insert(0, [entry, entries[entry]['title'], entries[entry]['date'], entries[entry]['rating']])
 
         for i in range((len(entries) // 1900) + 1):
-            with open(f'results-{i+1}.csv', 'w') as file:
+            with open(f'results-{i+1}.csv', 'w', newline='') as file:
                 writer = csv.writer(file, delimiter=',')
                 writer.writerow(header)
-                for line in lines[i*1900:(i+1)*1900]:
-                    writer.writerow(line)
+                writer.writerows(lines[i*1900:(i+1)*1900])
 
     def get_new_entries_since_date(self, date):
         entries = dict()
@@ -83,6 +108,10 @@ class ICMnIMDBtoLetterboxdImporter:
 @click.command()
 @click.option("-d", "--start-date", type=str, required=False, help='Start date of imported logs')
 def go(start_date):
+    csv_dl = CSVDownloader()
+    csv_dl.get_icm_checks_csv()
+    csv_dl.get_imdb_ratings_csv()
+
     importer = ICMnIMDBtoLetterboxdImporter()
     if start_date:
         importer.get_new_entries_since_date(start_date)
